@@ -1,0 +1,119 @@
+//
+// SPDX-FileCopyrightText: 2018-2025 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+android_app {
+    name: "org.lineageos.platform-res",
+    use_resource_processor: false,
+    sdk_version: "core_platform",
+    certificate: "platform",
+
+    manifest: "lineage/res/AndroidManifest.xml",
+
+    // Disable dexpreopt and verify_uses_libraries check as the app
+    // contains no Java code to be dexpreopted.
+    enforce_uses_libs: false,
+    dex_preopt: {
+        enabled: false,
+    },
+
+    // Soong special-cases org.lineageos.platform-res to install this alongside
+    // the libraries at /system_ext/framework/org.lineageos.platform-res.apk.
+
+    aaptflags: [
+        "--private-symbols",
+        "org.lineageos.platform.internal",
+
+        // Framework doesn't need versioning since it IS the platform.
+        "--no-auto-version",
+
+        // Allow overlay to add resource
+        "--auto-add-overlay",
+
+        // Tell aapt to create "extending (non-application)" resource IDs,
+        // since these resources will be used by many apps.
+        "--allow-reserved-package-id",
+        // Use id 0x3f (one less than app id).
+        "--package-id",
+        "63",
+    ],
+
+    resource_dirs: [
+        "lineage/res/res",
+    ],
+
+    // Create package-export.apk, which other packages can use to get
+    // PRODUCT-agnostic resource data like IDs and type definitions.
+    export_package_resources: true,
+}
+
+// The LineageOS Platform Framework Library
+// ============================================================
+
+filegroup {
+    name: "lineage-sdk-sources",
+    srcs: [
+        "sdk/src/java/lineageos/**/*.java",
+        "sdk/src/java/lineageos/**/I*.aidl",
+    ],
+}
+
+filegroup {
+    name: "lineage-sdk-internal-sources",
+    srcs: [
+        "sdk/src/java/org/lineageos/internal/**/*.java",
+        "sdk/src/java/org/lineageos/internal/**/I*.aidl",
+    ],
+}
+
+filegroup {
+    name: "lineage-library-sources",
+    srcs: ["lineage/lib/main/java/**/*.java"],
+}
+
+java_defaults {
+    name: "lineage-sdk-defaults",
+
+    // Include aidl files from lineageos.app namespace as well as internal src aidl files
+    aidl: {
+        local_include_dirs: ["sdk/src/java"],
+    },
+
+    srcs: [
+        ":lineage-sdk-internal-sources",
+        ":lineage-sdk-sources",
+        // For the generated R.java and Manifest.java
+        ":org.lineageos.platform-res{.aapt.srcjar}",
+    ],
+
+    static_libs: [
+        "vendor.lineage.health-V2-java",
+        "vendor.lineage.livedisplay-V1-java",
+        "vendor.lineage.touch-V1-java",
+    ],
+}
+
+java_library {
+    name: "org.lineageos.platform",
+    defaults: ["lineage-sdk-defaults"],
+    installable: true,
+    sdk_version: "core_platform",
+
+    libs: [
+        "framework",
+        "services",
+    ],
+
+    srcs: [
+        ":lineage-library-sources",
+    ],
+}
+
+// Full target for use by platform apps
+// ============================================================
+
+java_library {
+    name: "org.lineageos.platform.internal",
+    defaults: ["lineage-sdk-defaults"],
+}

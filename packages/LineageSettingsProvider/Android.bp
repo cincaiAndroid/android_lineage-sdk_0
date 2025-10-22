@@ -1,0 +1,31 @@
+//
+// SPDX-FileCopyrightText: 2018-2020 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+android_app {
+    name: "LineageSettingsProvider",
+    srcs: ["src/**/*.java"],
+    resource_dirs: ["res"],
+
+    certificate: "platform",
+    privileged: true,
+    platform_apis: true,
+    system_ext_specific: true,
+
+    static_libs: [
+        "org.lineageos.platform.internal",
+    ],
+
+    required: [
+        "privapp_whitelist_org.lineageos.lineagesettings",
+    ],
+}
+
+prebuilt_etc {
+    name: "privapp_whitelist_org.lineageos.lineagesettings",
+    sub_dir: "permissions",
+    src: "privapp_whitelist_org.lineageos.lineagesettings.xml",
+    filename_from_src: true,
+    system_ext_specific: true,
+}
